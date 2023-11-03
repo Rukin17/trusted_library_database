@@ -1,50 +1,19 @@
 from pydantic import BaseModel
 
 
-class CorrectLibraryBase(BaseModel):
-    library_name: str
-
-
-class CorrectLibraryCreate(CorrectLibraryBase):
-    pass
-
-
-class CorrectLibrary(CorrectLibraryBase):
+class User(BaseModel):
     id: int
-    user_id: int
-
-    class Config:
-        from_attributes = True
-
-
-class DangerousLibraryBase(BaseModel):
-    library_name: str
-
-
-class DangerousLibraryCreate(DangerousLibraryBase):
-    pass
-
-
-class DangerousLibrary(DangerousLibraryBase):
-    id: int
-    user_id: int
-
-    class Config:
-        from_attributes = True
-
-
-class UserBase(BaseModel):
+    fullname: str
     email: str
 
+    class Config:
+        from_attributes = True
 
-class UserCreate(UserBase):
-    password: str
 
-
-class User(UserBase):
+class Library(BaseModel):
     id: int
-    correct_libraries: list[CorrectLibrary] = []
-    dangerous_libraries: list[DangerousLibrary] = []
+    name: str
+    status: str
 
     class Config:
         from_attributes = True
