@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from tld import crud, models, schemas
 from tld.db import db_session, engine
 
-from tld.crud_1 import user, library
+from tld.crud import user, library, company, approver
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -29,9 +29,9 @@ def create_user(fullname: str, email: str, password: str, db: Session = Depends(
 
 
 @app.get('/users/{user_id}', response_model=schemas.User)
-def read_user(user_id: int, db: Session = Depends(get_db)):
+def get_user(user_id: int, db: Session = Depends(get_db)):
     db_user = user.get_user(db, user_id=user_id)
-    if db_user is None:
+    if not db_user:
         raise HTTPException(status_code=404, detail='User not found')
     return db_user
 
@@ -42,43 +42,30 @@ def add_library(name: str, db: Session = Depends(get_db)):
     return new_library
 
 
-# @app.get('/correct_libraries/', response_model=list[schemas.Library])
-# def read_libraries(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-#     libraries = crud.get_libraries(
-#         library=crud.Library.correct_library,
-#         db=db,
-#         skip=skip,
-#         limit=limit
-#         )
-#     return libraries
+@app.post('/companies/', response_model=schemas.Company)
+def create_company(name: str, db: Session = Depends(get_db)):
+    return company.create_company(db, name=name)
 
 
-# @app.post('/users/{user_id}/dangerous_libraries/', response_model=schemas.Library)
-# def add_library(user_id: int, library: schemas.DangerousLibraryCreate, db: Session = Depends(get_db)):
-#     new_library = crud.create_library(
-#         db=db, 
-#         library=crud.Library.dangerous_library, 
-#         library_schemas=crud.LibrarySchemas.dangerous_library, 
-#         user_id=user_id
-#         )
-#     return new_library
+@app.get('/companies/{company_id}', response_model=schemas.Company)
+def get_company_by_id(company_id: int, db: Session = Depends(get_db)):
+    db_company = company.get_company_by_id(db, id=company_id)
+    if not db_company:
+        raise HTTPException(status_code=404, detail='Company not found')
+    return db_company
 
 
-# @app.get('/dangerous_libraries/', response_model=list[schemas.Library])
-# def read_libraries(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-#     libraries = crud.get_libraries(
-#         library=crud.Library.dangerous_library,
-#         db=db,
-#         skip=skip,
-#         limit=limit
-#         )
-#     return libraries
+@app.post('/companies/{company_id}/create_approver/', response_model=schemas.Approver)
+def create_approver(fullname: str, password: str, email: str, company_id: int, db: Session = Depends(get_db)):
+    new_approver = approver.create_approver(
+        db=db,
+        fullname=fullname,
+        email=email,
+        password=password,
+        company_id=company_id
+        )
+    return new_approver
 
-
-
-@app.get('/')
-def read_root():
-    return {'hello': 'world'}
 
 
 if __name__ == '__main__':

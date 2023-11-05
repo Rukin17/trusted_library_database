@@ -1,5 +1,6 @@
 import datetime
 import enum
+
 from sqlalchemy import Column, Integer, String, TIMESTAMP, ForeignKey, Enum, Table
 from sqlalchemy.orm import relationship
 from tld.db import Base
@@ -30,7 +31,7 @@ class User(Base):
     registered_at = Column(TIMESTAMP, default=datetime.date.today())
 
     
-    approvers = relationship('Approver', back_populates='user')
+    # approvers = relationship('Approver', back_populates='user')
 
     def __repr__(self):
         return f'Company {self.id}, {self.fullname}'
@@ -52,11 +53,15 @@ class Approver(Base):
     __tablename__ = 'approvers'
     
     id = Column(Integer, primary_key=True, index=True)
+    fullname = Column(String, index=True)
+    email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    registered_at = Column(TIMESTAMP, default=datetime.date.today())
     company_id = Column(Integer, ForeignKey('companies.id'))
+    # user_id = Column(Integer, ForeignKey('users.id'))
+    
 
-    user = relationship('User', back_populates='approvers')
+    # user = relationship('User', back_populates='approvers')
     company = relationship('Company', back_populates='approvers')
     approved_libraries = relationship('ApprovedLibrary', back_populates='approver')
 
