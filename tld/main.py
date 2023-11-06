@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from tld import crud, models, schemas
 from tld.db import db_session, engine
 
-from tld.crud import user, library, company, approver
+from tld.crud import user, library, company, approver, approved_library
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -42,6 +42,32 @@ def add_library(name: str, db: Session = Depends(get_db)):
     return new_library
 
 
+@app.post('/libraries/{library_id}/update/', response_model=schemas.Library)
+def update_library(library_id: int, db: Session = Depends(get_db)):
+    update_library = library.get_library(db=db, library_id=library_id)
+    if not update_library:
+        raise HTTPException(status_code=404, detail=("Library doesn't exists"))
+    return library.update_library(db=db, library=update_library)
+
+
+@app.post('/companies/{approver_id}/create_approved_libraries/', response_model=schemas.ApprovedLibrary)
+def create_approved_library(approver_id: int, library_id: int, db: Session = Depends(get_db)):
+    db_library = library.get_library(db, library_id=library_id)
+
+    if not db_library:
+        raise HTTPException(status_code=404, detail=("Library doesn't exists"))
+    
+    # TODO написать проверку elif db_library.status != models.Status.approved: 
+
+    approves =  approved_library.create_approved_library(
+        db=db,
+        name=db_library.name,
+        approver_id=approver_id,
+        library_id=library_id
+        )
+    return approves
+
+
 @app.post('/companies/', response_model=schemas.Company)
 def create_company(name: str, db: Session = Depends(get_db)):
     return company.create_company(db, name=name)
@@ -57,15 +83,22 @@ def get_company_by_id(company_id: int, db: Session = Depends(get_db)):
 
 @app.post('/companies/{company_id}/create_approver/', response_model=schemas.Approver)
 def create_approver(fullname: str, password: str, email: str, company_id: int, db: Session = Depends(get_db)):
+    db_user = user.get_user_by_email(db, email=email)
+    if db_user:
+        raise HTTPException(status_code=400, detail='Email already registered')
+    new_user = user.create_user(db=db, fullname=fullname, email=email, password=password)
+
     new_approver = approver.create_approver(
         db=db,
         fullname=fullname,
         email=email,
-        password=password,
-        company_id=company_id
+        company_id=company_id,
+        user_id=new_user.id
         )
     return new_approver
 
+#TODO ручка delete approver 
+#TODO ручка authors
 
 
 if __name__ == '__main__':

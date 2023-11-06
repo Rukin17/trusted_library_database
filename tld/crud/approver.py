@@ -3,13 +3,12 @@ from sqlalchemy.orm import Session
 from tld import models
 
 
-def create_approver(db: Session, fullname: str, email: str, password: str, company_id: str):
-    fake_hashed_password = password + 'notreallyhashed'
+def create_approver(db: Session, fullname: str, email: str, company_id: int, user_id: int):
     db_approver = models.Approver(
         fullname=fullname,
         email=email,
-        hashed_password=fake_hashed_password,
-        company_id=company_id
+        company_id=company_id,
+        user_id=user_id
         )
     db.add(db_approver)
     db.commit()

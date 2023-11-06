@@ -16,3 +16,10 @@ def create_library(db: Session, name: str, status: models.Status = models.Status
     db.add(db_lybrary)
     db.commit()
     return db_lybrary
+
+
+def update_library(db: Session, library: models.Library, status: models.Status = models.Status.approved):
+    library.status = status
+    db.commit()
+    db.refresh(library)
+    return library

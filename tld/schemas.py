@@ -32,6 +32,17 @@ class Approver(BaseModel):
     fullname: str
     email: str
     company_id: int
+    user_id: int
+
+    class Config:
+        from_attributes = True
+
+
+class ApprovedLibrary(BaseModel):
+    id: int
+    name: str
+    approver_id: int
+    library_id: int
 
     class Config:
         from_attributes = True
