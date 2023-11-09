@@ -1,7 +1,7 @@
 import datetime
 import enum
 
-from sqlalchemy import Column, Integer, String, TIMESTAMP, ForeignKey, Enum, Table
+from sqlalchemy import Column, Integer, String, TIMESTAMP, ForeignKey, Enum, Table, Boolean
 from sqlalchemy.orm import relationship
 from tld.db import Base
 
@@ -25,11 +25,13 @@ class User(Base):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True)
     fullname = Column(String, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
+    disabled = Column(Boolean, index=True)
     registered_at = Column(TIMESTAMP, default=datetime.date.today())
-
+    
     
     approvers = relationship('Approver', back_populates='user')
 
@@ -44,9 +46,21 @@ class Company(Base):
     name = Column(String, unique=True, index=True)
 
     approvers = relationship('Approver', back_populates='company')
+    managers = relationship('Manager', back_populates='company')
 
     def __repr__(self):
         return f'Company {self.id}, {self.name}'
+
+
+class Manager(Base):
+    __tablename__ = 'managers'
+
+    id = Column(Integer, primary_key=True, index=True)
+    fullname = Column(String, index=True)
+    email = Column(String, unique=True, index=True)
+    company_id = Column(Integer, ForeignKey('companies.id'), nullable=True)
+
+    company = relationship('Company', back_populates='managers')
 
 
 class Approver(Base):
@@ -56,7 +70,8 @@ class Approver(Base):
     fullname = Column(String, index=True)
     email = Column(String, unique=True, index=True)
     registered_at = Column(TIMESTAMP, default=datetime.date.today())
-    company_id = Column(Integer, ForeignKey('companies.id'))
+    is_active = Column(Boolean, default=True)
+    company_id = Column(Integer, ForeignKey('companies.id'), nullable=True)
     user_id = Column(Integer, ForeignKey('users.id'))
     
 

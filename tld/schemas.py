@@ -3,12 +3,20 @@ from tld.models import Status
 
 class User(BaseModel):
     id: int
+    username: str
     fullname: str
     email: str
+    disabled: bool | None = None
 
     class Config:
         from_attributes = True
 
+
+class UserInDB(User):
+    hashed_password: str
+
+    class Config:
+        from_attributes = True
 
 class Library(BaseModel):
     id: int
@@ -31,8 +39,9 @@ class Approver(BaseModel):
     id: int
     fullname: str
     email: str
-    company_id: int
     user_id: int
+    company_id: int | None
+    is_active: bool
 
     class Config:
         from_attributes = True
@@ -43,6 +52,7 @@ class ApprovedLibrary(BaseModel):
     name: str
     approver_id: int
     library_id: int
+
 
     class Config:
         from_attributes = True
