@@ -1,30 +1,26 @@
+import enum
 import uvicorn
 import sqlalchemy
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from fastapi import FastAPI, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from typing import Annotated
-from dataclasses import dataclass
-from jose import JWTError, jwt
-from passlib.context import CryptContext
+from fastapi.security import OAuth2PasswordRequestForm
 
-from pydantic import BaseModel
+from typing import Annotated
 from sqlalchemy.orm import Session
-from enum import Enum
-from tld import crud, models, schemas
+
+
+from . import models, schemas
 from tld.db import db_session, engine
 
 from tld.crud import user, library, company, approver, approved_library
+from tld.auth import Token, authenticate_user, ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, get_current_active_user
+
+
 
 models.Base.metadata.create_all(bind=engine)
 
 
-# to get a string like this run:
-# openssl rand -hex 32
-SECRET_KEY = "613a5daa21f5aafe87905481e0ad04d622b7e62269218f973d844b4cd9beae34"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
 
@@ -36,114 +32,14 @@ def get_db():
         db.close()
 
 
-class Roles(Enum):
+class Roles(enum.Enum):
     USER = 1
     APPROVER = 2
     MANAGER = 3
     ADMIN = 4
 
 
-fake_users_db = {
-    "johndoe": {
-        'id': 1,
-        "username": "johndoe",
-        'roles': [Roles.APPROVER, Roles.USER, Roles.MANAGER, Roles.ADMIN],
-        "fullname": "John Doe",
-        "email": "johndoe@example.com",
-        "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
-        "disabled": False,
-    }
-}
-
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-
-class TokenData(BaseModel):
-    username: str | None = None
-
-
 app = FastAPI()
-
-def fake_hash_password(password: str):
-    return 'fakehashed' + password
-
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
-
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
-
-
-def get_password_hash(password):
-    return pwd_context.hash(password)
-
-@dataclass
-class UserInDB:
-    id: int
-    username: str
-    fullname: str
-    email: str
-    hashed_password: str
-    disabled: bool
-
-
-def get_user(db: Session, username: str):
-    db_user = user.get_user_by_username(db, username=username)
-    # if username in users:
-    #     user_dict = db[username]
-    return UserInDB(db_user.id, db_user.username, db_user.fullname, db_user.email, db_user.hashed_password, db_user.disabled)
-
-
-def authenticate_user(db, username: str, password: str):
-    user = get_user(db, username=username)
-    if not user:
-        return False
-    if not verify_password(password, user.hashed_password):
-        return False
-    return user
-
-
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-
-def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Session = Depends(get_db)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-        token_data = TokenData(username=username)
-    except JWTError:
-        raise credentials_exception
-    user = get_user(db, username=token_data.username)
-    if user is None:
-        raise credentials_exception
-    return user
-
-
-def get_current_active_user(
-    current_user: Annotated[schemas.User, Depends(get_current_user)]
-):
-    if current_user.disabled:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    return current_user
 
 
 @app.post("/token", response_model=Token)
@@ -174,8 +70,6 @@ def read_own_items(
     current_user: Annotated[schemas.User, Depends(get_current_active_user)]
 ):
     return [{"item_id": "Foo", "owner": current_user.username}]
-
-
 
 
 
