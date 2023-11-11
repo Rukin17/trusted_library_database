@@ -28,7 +28,7 @@ class User(Base):
     username = Column(String, unique=True, index=True)
     fullname = Column(String, index=True)
     email = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
+    hashed_password = Column(String, nullable=False)
     disabled = Column(Boolean, index=True)
     registered_at = Column(TIMESTAMP, default=datetime.date.today())
     

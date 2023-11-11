@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 
 from . import models, schemas
-from tld.db import db_session, engine
+from tld.db import get_db, engine
 
 from tld.crud import user, library, company, approver, approved_library
 from tld.auth import Token, authenticate_user, ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, get_current_active_user
@@ -23,13 +23,6 @@ models.Base.metadata.create_all(bind=engine)
 
 
 
-
-def get_db():
-    db = db_session()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 class Roles(enum.Enum):

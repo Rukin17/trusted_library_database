@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from jose import JWTError, jwt
 from tld.hashing import Hasher
 from sqlalchemy.orm import Session
-from tld.db import db_session
+from tld.db import get_db
 from . import schemas
 
 
@@ -22,14 +22,6 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
-
-
-def get_db():
-    db = db_session()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 class Token(BaseModel):
@@ -54,8 +46,7 @@ class UserInDB:
 
 def get_user(db: Session, username: str):
     db_user = user.get_user_by_username(db, username=username)
-    # if username in users:
-    #     user_dict = db[username]
+    
     return UserInDB(db_user.id, db_user.username, db_user.fullname, db_user.email, db_user.hashed_password, db_user.disabled)
 
 
