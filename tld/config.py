@@ -15,4 +15,4 @@ def load():
         db_url=os.environ['SQLALCHEMY_DATABASE_URL']
     )
 
-config = load()
+my_config = load()

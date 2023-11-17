@@ -4,9 +4,12 @@ import enum
 from sqlalchemy import Column, Integer, String, TIMESTAMP, ForeignKey, Enum, Table, Boolean
 from sqlalchemy.orm import relationship
 from tld.db import Base
+from sqlalchemy.ext.declarative import declarative_base
+
+Base = declarative_base()
 
 
-class Status(enum.Enum):
+class Status_2(enum.Enum):
     approved = 'approved'
     malware = 'malware'
     untested = 'untested'
@@ -25,9 +28,9 @@ class User(Base):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
-    fullname = Column(String, index=True)
-    email = Column(String, unique=True, index=True)
+    username = Column(String, unique=True, nullable=False, index=True)
+    fullname = Column(String, nullable=False, index=True)
+    email = Column(String, unique=True, nullable=False, index=True)
     hashed_password = Column(String, nullable=False)
     disabled = Column(Boolean, index=True)
     registered_at = Column(TIMESTAMP, default=datetime.date.today())
@@ -103,7 +106,7 @@ class Library(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
-    status = Column(Enum(Status), index=True)
+    status = Column(Enum(Status_2), index=True)
 
     approved_libraries = relationship('ApprovedLibrary', back_populates='library')
     authors = relationship('Author', secondary=association_table, back_populates='libraries')

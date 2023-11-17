@@ -1,28 +1,20 @@
 import enum
 import uvicorn
 import sqlalchemy
-from datetime import timedelta
 
+from datetime import timedelta
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-
 from typing import Annotated
 from sqlalchemy.orm import Session
 
-
 from . import models, schemas
 from tld.db import get_db, engine
-
 from tld.crud import user, library, company, approver, approved_library
 from tld.auth import Token, authenticate_user, ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, get_current_active_user
 
 
-
 models.Base.metadata.create_all(bind=engine)
-
-
-
-
 
 
 class Roles(enum.Enum):
