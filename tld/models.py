@@ -9,10 +9,19 @@ from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 
-class Status_2(enum.Enum):
+class LibraryStatus(enum.Enum):
     approved = 'approved'
     malware = 'malware'
     untested = 'untested'
+
+
+
+class Roles(enum.Enum):
+    USER = 1
+    APPROVER = 2
+    MANAGER = 3
+    ADMIN = 4
+
 
 
 association_table = Table(
@@ -35,12 +44,28 @@ class User(Base):
     disabled = Column(Boolean, index=True)
     registered_at = Column(TIMESTAMP, default=datetime.date.today())
     
-    
     approvers = relationship('Approver', back_populates='user')
+    roles = relationship('Role', back_populates='user')
 
     def __repr__(self):
         return f'Company {self.id}, {self.fullname}'
 
+
+class Role(Base):
+    __tablename__ = 'roles'
+
+    id = Column(Integer, primary_key=True, index=True)
+    user = Column(Boolean, default=True, index=True)
+    admin = Column(Boolean, default=False, index=True)
+    approver = Column(Boolean, default=False, index=True)
+    manager = Column(Boolean, default=False, index=True)
+
+    user_id = Column(Integer, ForeignKey('users.id'))
+
+    user = relationship('User', back_populates='roles')
+
+    def __repr__(self):
+        return f'Roles {id}'
 
 class Company(Base):
     __tablename__ = 'companies'
@@ -106,7 +131,7 @@ class Library(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
-    status = Column(Enum(Status_2), index=True)
+    status = Column(Enum(LibraryStatus), index=True)
 
     approved_libraries = relationship('ApprovedLibrary', back_populates='library')
     authors = relationship('Author', secondary=association_table, back_populates='libraries')

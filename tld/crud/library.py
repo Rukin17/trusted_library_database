@@ -12,13 +12,13 @@ def get_libraries(db: Session, skip : int = 0, limit: int = 100):
 
 
 def create_library(db: Session, name: str):
-    db_lybrary = models.Library(name=name, status=models.Status.untested)
+    db_lybrary = models.Library(name=name, status=models.LibraryStatus.untested)
     db.add(db_lybrary)
     db.commit()
     return db_lybrary
 
 
-def change_status(db: Session, library: models.Library, status: models.Status):
+def change_status(db: Session, library: models.Library, status: models.LibraryStatus):
     library.status = status
     db.commit()
     return library

@@ -8,20 +8,16 @@ from jose import JWTError, jwt
 from tld.hashing import Hasher
 from sqlalchemy.orm import Session
 from tld.db import get_db
-from . import schemas
-
+from tld import schemas
+from tld.config import my_config
 
 from tld.crud import user
 from fastapi.security import OAuth2PasswordBearer
 
-# to get a string like this run:
-# openssl rand -hex 32
-SECRET_KEY = "613a5daa21f5aafe87905481e0ad04d622b7e62269218f973d844b4cd9beae34"
-ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='login/token')
 
 
 class Token(BaseModel):
@@ -66,7 +62,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     else:
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, my_config.secret_key, algorithm=my_config.algorithm)
     return encoded_jwt
 
 
@@ -77,7 +73,7 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Session 
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, my_config.secret_key, algorithms=[my_config.algorithm])
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
