@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from tld.models import LibraryStatus
+from tld.models import Status
 
 class User(BaseModel):
     id: int
@@ -21,7 +21,7 @@ class UserInDB(User):
 class Library(BaseModel):
     id: int
     name: str
-    status: LibraryStatus
+    status: Status
 
     class Config:
         from_attributes = True

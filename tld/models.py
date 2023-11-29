@@ -9,7 +9,7 @@ from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 
-class LibraryStatus(enum.Enum):
+class Status(enum.Enum):
     approved = 'approved'
     malware = 'malware'
     untested = 'untested'
@@ -131,7 +131,7 @@ class Library(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
-    status = Column(Enum(LibraryStatus), index=True)
+    status = Column(Enum(Status), index=True)
 
     approved_libraries = relationship('ApprovedLibrary', back_populates='library')
     authors = relationship('Author', secondary=association_table, back_populates='libraries')

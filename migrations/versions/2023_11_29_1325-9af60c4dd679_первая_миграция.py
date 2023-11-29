@@ -1,8 +1,8 @@
-"""1 migration
+"""Первая миграция
 
-Revision ID: 9079bd732fac
+Revision ID: 9af60c4dd679
 Revises: 
-Create Date: 2023-11-20 17:16:06.628686
+Create Date: 2023-11-29 13:25:23.075550
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '9079bd732fac'
+revision: str = '9af60c4dd679'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -37,7 +37,7 @@ def upgrade() -> None:
     op.create_table('libraries',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=True),
-    sa.Column('status', sa.Enum('approved', 'malware', 'untested', name='librarystatus'), nullable=True),
+    sa.Column('status', sa.Enum('approved', 'malware', 'untested', name='status'), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_libraries_id'), 'libraries', ['id'], unique=False)
@@ -92,6 +92,19 @@ def upgrade() -> None:
     op.create_index(op.f('ix_managers_email'), 'managers', ['email'], unique=True)
     op.create_index(op.f('ix_managers_fullname'), 'managers', ['fullname'], unique=False)
     op.create_index(op.f('ix_managers_id'), 'managers', ['id'], unique=False)
+    op.create_table('roles',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('admin', sa.Boolean(), nullable=True),
+    sa.Column('approver', sa.Boolean(), nullable=True),
+    sa.Column('manager', sa.Boolean(), nullable=True),
+    sa.Column('user_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_roles_admin'), 'roles', ['admin'], unique=False)
+    op.create_index(op.f('ix_roles_approver'), 'roles', ['approver'], unique=False)
+    op.create_index(op.f('ix_roles_id'), 'roles', ['id'], unique=False)
+    op.create_index(op.f('ix_roles_manager'), 'roles', ['manager'], unique=False)
     op.create_table('approved_libraries',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=True),
@@ -111,6 +124,11 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_approved_libraries_name'), table_name='approved_libraries')
     op.drop_index(op.f('ix_approved_libraries_id'), table_name='approved_libraries')
     op.drop_table('approved_libraries')
+    op.drop_index(op.f('ix_roles_manager'), table_name='roles')
+    op.drop_index(op.f('ix_roles_id'), table_name='roles')
+    op.drop_index(op.f('ix_roles_approver'), table_name='roles')
+    op.drop_index(op.f('ix_roles_admin'), table_name='roles')
+    op.drop_table('roles')
     op.drop_index(op.f('ix_managers_id'), table_name='managers')
     op.drop_index(op.f('ix_managers_fullname'), table_name='managers')
     op.drop_index(op.f('ix_managers_email'), table_name='managers')
